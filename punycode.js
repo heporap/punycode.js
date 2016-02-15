@@ -1,4 +1,5 @@
-/*! https://mths.be/punycode v1.4.0 by @mathias */
+/*! https://mths.be/punycode v1.4.0 by @mathias
+modified https://github.com/heporap/ v1.0.0 by Wicker Wings @heporap */
 ;(function(root) {
 
 	/** Detect free variables */
@@ -97,6 +98,7 @@
 	function mapDomain(string, fn) {
 		var parts = string.split('@');
 		var result = '';
+		var path = '';
 		if (parts.length > 1) {
 			// In email addresses, only the domain name should be punycoded. Leave
 			// the local part (i.e. everything up to `@`) intact.
@@ -105,9 +107,58 @@
 		}
 		// Avoid `split(regex)` for IE8 compatibility. See #17.
 		string = string.replace(regexSeparators, '\x2E');
+		
+		// adapt for subdomain and path
+		parts = string.match(/^.+?:\/\//);
+		if( parts ){
+			result = parts;
+			string = string.replace(result, '');
+			
+			parts = string.split('/');
+			if( parts.length > 1 ){
+				string = parts.shift();
+				path = '/'+map(parts, function(string){
+					return encodeURIComponent(string);
+				}).join('/');
+			}
+			
+		}
+		
+		string = nameprep(string);
+		
+		// adapt for case mapping
+		string = string.toLowerCase();
+		
 		var labels = string.split('.');
 		var encoded = map(labels, fn).join('.');
-		return result + encoded;
+		return result + encoded + path;
+	}
+
+	/**
+	 * adapt for NAMEPREP.
+	 * @see RFC3491
+	 * @see <https://www.nic.ad.jp/ja/dom/idn.html>
+	 * @private
+	 * @param {String} string The Unicode input string.
+	 * @returns {String} string which is adapted NAMEPREP
+	 */
+	function nameprep(string) {
+		// zenkaku alphabet and digits to hankaku
+		string = string.replace(/[０-９Ａ-Ｚａ-ｚ]/g, function (s) {
+			return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+		});
+		
+		// Japanese hankaku to zenkaku
+		var han = 'ｦｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ'.split('');
+		var han2 = 'ｶﾞｷﾞｸﾞｹﾞｺﾞｻﾞｼﾞｽﾞｾﾞｿﾞﾀﾞﾁﾞﾂﾞﾃﾞﾄﾞﾊﾞﾋﾞﾌﾞﾍﾞﾎﾞﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟ'.match(/../g);
+		var hankaku = han2.concat(han);
+		var zenkaku = 'ガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヲァィゥェォャュョッーアイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワン'.split('');
+		var reg = new RegExp(hankaku.join('|'), 'g');
+		string = string.replace(reg, function (s) {
+			return zenkaku[ hankaku.indexOf(s) ];
+		});
+		
+		return string;
 	}
 
 	/**

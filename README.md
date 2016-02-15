@@ -12,6 +12,10 @@ This JavaScript library is the result of comparing, optimizing and documenting d
 
 This project is [bundled](https://github.com/joyent/node/blob/master/lib/punycode.js) with [Node.js v0.6.2+](https://github.com/joyent/node/compare/975f1930b1...61e796decc) and [io.js v1.0.0+](https://github.com/iojs/io.js/blob/v1.x/lib/punycode.js).
 
+Modified by [@heporap](https://github.com/heporap/)
+* Support for subdomains
+* Convert hankaku-katakana to zenkaku-katakana, zenkaku alphabet and digits to hankaku ones for NAMEPREP [RFC 3491](https://tools.ietf.org/html/rfc3491).
+
 ## Installation
 
 Via [npm](https://www.npmjs.com/) (only required for Node.js releases older than v0.6.2):
